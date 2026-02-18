@@ -262,6 +262,12 @@ const Transactions = () => {
                             <span className={`px-2 py-0.5 text-xs rounded-full ${txn.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                               {txn.type}
                             </span>
+                            {txn.is_recurring && (
+                              <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 flex items-center gap-1">
+                                <RefreshCw className="h-3 w-3" />
+                                {txn.recurring_frequency === 'twice_monthly' ? '2x/mo' : 'Monthly'}
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-500">{txn.description || 'No description'}</p>
                           <p className="text-xs text-gray-400 mt-1">{new Date(txn.date).toLocaleDateString()}</p>
