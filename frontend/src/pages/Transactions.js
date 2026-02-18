@@ -317,17 +317,29 @@ const Transactions = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                  required
-                  data-testid="transaction-amount-input"
-                />
+                <Label htmlFor="amount">
+                  Amount {formData.account_id && accounts.find(a => a.id === formData.account_id) && 
+                    `(${accounts.find(a => a.id === formData.account_id).currency})`} *
+                </Label>
+                <div className="relative">
+                  {formData.account_id && accounts.find(a => a.id === formData.account_id) && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                      {CURRENCY_SYMBOLS[accounts.find(a => a.id === formData.account_id).currency] || 
+                       accounts.find(a => a.id === formData.account_id).currency}
+                    </span>
+                  )}
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    required
+                    className={formData.account_id && accounts.find(a => a.id === formData.account_id) ? 'pl-12' : ''}
+                    data-testid="transaction-amount-input"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
