@@ -564,7 +564,8 @@ async def get_dashboard_overview(
 @api_router.get("/dashboard/trends")
 async def get_dashboard_trends(
     current_user: User = Depends(get_current_user),
-    months: int = 6
+    months: int = 6,
+    account_id: Optional[str] = None
 ):
     now = datetime.now(timezone.utc)
     trends = []
@@ -580,10 +581,14 @@ async def get_dashboard_trends(
         else:
             end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc).isoformat()
         
-        transactions = await db.transactions.find({
+        query = {
             "user_id": current_user.id,
             "date": {"$gte": start_date, "$lt": end_date}
-        }, {"_id": 0}).to_list(10000)
+        }
+        if account_id:
+            query["account_id"] = account_id
+            
+        transactions = await db.transactions.find(query, {"_id": 0}).to_list(10000)
         
         income = sum(t['amount'] for t in transactions if t['type'] == 'income')
         expense = sum(t['amount'] for t in transactions if t['type'] == 'expense')
@@ -602,7 +607,8 @@ async def get_category_breakdown(
     current_user: User = Depends(get_current_user),
     month: Optional[int] = None,
     year: Optional[int] = None,
-    type: str = "expense"
+    type: str = "expense",
+    account_id: Optional[str] = None
 ):
     now = datetime.now(timezone.utc)
     target_month = month or now.month
@@ -614,11 +620,15 @@ async def get_category_breakdown(
     else:
         end_date = datetime(target_year, target_month + 1, 1, tzinfo=timezone.utc).isoformat()
     
-    transactions = await db.transactions.find({
+    query = {
         "user_id": current_user.id,
         "type": type,
         "date": {"$gte": start_date, "$lt": end_date}
-    }, {"_id": 0}).to_list(10000)
+    }
+    if account_id:
+        query["account_id"] = account_id
+        
+    transactions = await db.transactions.find(query, {"_id": 0}).to_list(10000)
     
     categories = await db.categories.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
     category_map = {cat['id']: cat for cat in categories}
