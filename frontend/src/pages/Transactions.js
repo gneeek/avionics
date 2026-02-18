@@ -419,6 +419,45 @@ const Transactions = () => {
                 />
               </div>
 
+              {/* Recurring Transaction Options */}
+              <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="is_recurring"
+                    checked={formData.is_recurring}
+                    onCheckedChange={(checked) => setFormData({...formData, is_recurring: checked})}
+                    data-testid="transaction-recurring-checkbox"
+                  />
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-blue-600" />
+                    <Label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
+                      This is a recurring transaction
+                    </Label>
+                  </div>
+                </div>
+                
+                {formData.is_recurring && (
+                  <div className="ml-7 space-y-2">
+                    <Label htmlFor="recurring_frequency" className="text-sm">Frequency</Label>
+                    <Select 
+                      value={formData.recurring_frequency} 
+                      onValueChange={(val) => setFormData({...formData, recurring_frequency: val})}
+                    >
+                      <SelectTrigger data-testid="transaction-frequency-select" className="w-full">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly (Once per month)</SelectItem>
+                        <SelectItem value="twice_monthly">Twice Monthly (2x per month)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recurring transactions will be used for 6-month projections on the dashboard.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={closeDialog}>
                   Cancel
