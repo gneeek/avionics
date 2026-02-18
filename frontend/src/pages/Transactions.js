@@ -426,6 +426,38 @@ const Transactions = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent data-testid="delete-confirmation-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this transaction? This action cannot be undone.
+                {deletingTransaction && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {deletingTransaction.description || 'No description'}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Amount: {formatCurrency(deletingTransaction.amount)}
+                    </p>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="delete-cancel-button">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+                data-testid="delete-confirm-button"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
