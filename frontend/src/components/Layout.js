@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Receipt, Tag, PiggyBank, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Receipt, Tag, PiggyBank, LogOut, Menu, X, Wallet } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -12,7 +12,7 @@ const Layout = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Accounts', href: '/accounts', icon: Receipt },
+    { name: 'Accounts', href: '/accounts', icon: Wallet },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
     { name: 'Categories', href: '/categories', icon: Tag },
     { name: 'Budgets', href: '/budgets', icon: PiggyBank },
