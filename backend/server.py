@@ -119,6 +119,7 @@ class TransactionCreate(BaseModel):
     description: str = ""
     date: datetime
     is_recurring: bool = False
+    recurring_frequency: Optional[Literal["monthly", "twice_monthly"]] = None
 
 class Transaction(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -131,6 +132,7 @@ class Transaction(BaseModel):
     description: str
     date: datetime
     is_recurring: bool
+    recurring_frequency: Optional[Literal["monthly", "twice_monthly"]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BudgetCreate(BaseModel):
