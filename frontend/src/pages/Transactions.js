@@ -135,7 +135,8 @@ const Transactions = () => {
         account_id: transaction.account_id,
         description: transaction.description,
         date: new Date(transaction.date),
-        is_recurring: transaction.is_recurring
+        is_recurring: transaction.is_recurring || false,
+        recurring_frequency: transaction.recurring_frequency || 'monthly'
       });
     } else {
       setEditingTransaction(null);
@@ -147,7 +148,8 @@ const Transactions = () => {
         account_id: defaultAccount?.id || '',
         description: '',
         date: new Date(),
-        is_recurring: false
+        is_recurring: false,
+        recurring_frequency: 'monthly'
       });
     }
     setDialogOpen(true);
