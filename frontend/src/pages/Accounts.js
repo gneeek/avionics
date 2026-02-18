@@ -94,15 +94,20 @@ const Accounts = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this account?')) {
-      return;
-    }
+  const openDeleteDialog = (account) => {
+    setDeletingAccount(account);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingAccount) return;
 
     try {
-      await axios.delete(`${API_URL}/accounts/${id}`);
+      await axios.delete(`${API_URL}/accounts/${deletingAccount.id}`);
       toast.success('Account deleted successfully');
       fetchAccounts();
+      setDeleteDialogOpen(false);
+      setDeletingAccount(null);
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error(error.response?.data?.detail || 'Failed to delete account');
