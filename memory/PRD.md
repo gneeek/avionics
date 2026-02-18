@@ -73,6 +73,7 @@ Build a multi-user cashflow application to track income and expenses with multi-
 - [x] Dynamic Currency Display in forms
 - [x] 6-Month Projections Feature (Backend + Frontend)
 - [x] Recurring Transaction Management
+- [x] Unified AlertDialog delete confirmation across all pages (Categories, Accounts, Budgets)
 
 ## Testing Status
 - Backend: 100% (16/16 tests passed)
