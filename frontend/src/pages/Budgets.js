@@ -20,7 +20,9 @@ const Budgets = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
+  const [deletingBudget, setDeletingBudget] = useState(null);
 
   const [formData, setFormData] = useState({
     category_id: '',
