@@ -80,6 +80,22 @@ class BankAccount(BaseModel):
     is_default: bool
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class BalanceUpdateCreate(BaseModel):
+    new_balance: float
+    notes: str = ""
+
+class BalanceUpdate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    account_id: str
+    user_id: str
+    user_name: str
+    previous_balance: float
+    new_balance: float
+    adjustment_amount: float
+    notes: str
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class CategoryCreate(BaseModel):
     name: str
     type: Literal["income", "expense"]
