@@ -357,6 +357,76 @@ async def get_account_balance(account_id: str, current_user: User = Depends(get_
         "current_balance": current_balance
     }
 
+@api_router.post("/accounts/{account_id}/update-balance", response_model=BalanceUpdate)
+async def update_account_balance(
+    account_id: str, 
+    update_data: BalanceUpdateCreate, 
+    current_user: User = Depends(get_current_user)
+):
+    # Get account
+    account = await db.bank_accounts.find_one({"id": account_id, "user_id": current_user.id}, {"_id": 0})
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # Calculate current balance (opening + transactions)
+    transactions = await db.transactions.find({
+        "user_id": current_user.id,
+        "account_id": account_id
+    }, {"_id": 0}).to_list(10000)
+    
+    total_income = sum(t['amount'] for t in transactions if t['type'] == 'income')
+    total_expense = sum(t['amount'] for t in transactions if t['type'] == 'expense')
+    current_balance = account['opening_balance'] + total_income - total_expense
+    
+    # Calculate adjustment needed
+    adjustment = update_data.new_balance - current_balance
+    
+    # Update the opening balance to achieve the new balance
+    new_opening_balance = account['opening_balance'] + adjustment
+    
+    await db.bank_accounts.update_one(
+        {"id": account_id, "user_id": current_user.id},
+        {"$set": {"opening_balance": new_opening_balance}}
+    )
+    
+    # Create balance update history record
+    balance_update = BalanceUpdate(
+        account_id=account_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        previous_balance=current_balance,
+        new_balance=update_data.new_balance,
+        adjustment_amount=adjustment,
+        notes=update_data.notes
+    )
+    
+    doc = balance_update.model_dump()
+    doc['date'] = doc['date'].isoformat()
+    
+    await db.balance_updates.insert_one(doc)
+    
+    return balance_update
+
+@api_router.get("/accounts/{account_id}/balance-history", response_model=List[BalanceUpdate])
+async def get_balance_history(account_id: str, current_user: User = Depends(get_current_user)):
+    # Verify account belongs to user
+    account = await db.bank_accounts.find_one({"id": account_id, "user_id": current_user.id})
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # Get all balance updates for this account
+    updates = await db.balance_updates.find(
+        {"account_id": account_id},
+        {"_id": 0}
+    ).sort("date", -1).to_list(1000)
+    
+    # Convert ISO strings to datetime
+    for update in updates:
+        if isinstance(update.get('date'), str):
+            update['date'] = datetime.fromisoformat(update['date'])
+    
+    return updates
+
 # ============= CATEGORY ROUTES =============
 
 @api_router.get("/categories", response_model=List[Category])
