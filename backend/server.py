@@ -497,7 +497,8 @@ async def delete_budget(budget_id: str, current_user: User = Depends(get_current
 async def get_dashboard_overview(
     current_user: User = Depends(get_current_user),
     month: Optional[int] = None,
-    year: Optional[int] = None
+    year: Optional[int] = None,
+    account_id: Optional[str] = None
 ):
     now = datetime.now(timezone.utc)
     target_month = month or now.month
@@ -510,16 +511,44 @@ async def get_dashboard_overview(
     else:
         end_date = datetime(target_year, target_month + 1, 1, tzinfo=timezone.utc).isoformat()
     
-    # Get all transactions for the month
-    transactions = await db.transactions.find({
+    # Build query
+    query = {
         "user_id": current_user.id,
         "date": {"$gte": start_date, "$lt": end_date}
-    }, {"_id": 0}).to_list(10000)
+    }
+    if account_id:
+        query["account_id"] = account_id
+    
+    # Get all transactions for the month
+    transactions = await db.transactions.find(query, {"_id": 0}).to_list(10000)
     
     total_income = sum(t['amount'] for t in transactions if t['type'] == 'income')
     total_expense = sum(t['amount'] for t in transactions if t['type'] == 'expense')
     net_balance = total_income - total_expense
     savings_rate = (net_balance / total_income * 100) if total_income > 0 else 0
+    
+    # Get all accounts with current balances
+    accounts = await db.bank_accounts.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
+    account_balances = []
+    
+    for account in accounts:
+        # Get all transactions for this account (all time)
+        account_txns = await db.transactions.find({
+            "user_id": current_user.id,
+            "account_id": account['id']
+        }, {"_id": 0}).to_list(10000)
+        
+        acc_income = sum(t['amount'] for t in account_txns if t['type'] == 'income')
+        acc_expense = sum(t['amount'] for t in account_txns if t['type'] == 'expense')
+        current_balance = account['opening_balance'] + acc_income - acc_expense
+        
+        account_balances.append({
+            "id": account['id'],
+            "name": account['name'],
+            "currency": account['currency'],
+            "current_balance": current_balance,
+            "is_default": account.get('is_default', False)
+        })
     
     return {
         "total_income": total_income,
@@ -528,7 +557,8 @@ async def get_dashboard_overview(
         "savings_rate": round(savings_rate, 2),
         "transaction_count": len(transactions),
         "month": target_month,
-        "year": target_year
+        "year": target_year,
+        "account_balances": account_balances
     }
 
 @api_router.get("/dashboard/trends")
