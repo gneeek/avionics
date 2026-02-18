@@ -207,7 +207,10 @@ const Budgets = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(budget.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(budget);
+                          }}
                           data-testid={`delete-budget-${budget.id}`}
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
