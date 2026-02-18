@@ -206,6 +206,102 @@ const Dashboard = () => {
           </Card>
         </div>
 
+        {/* Total Cash Section */}
+        {totalCash && (
+          <Card className="border-2 border-blue-200 bg-blue-50" data-testid="total-cash-card">
+            <Collapsible open={isTotalCashOpen} onOpenChange={setIsTotalCashOpen}>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-blue-100 transition-colors rounded-t-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                        <Wallet className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <CardTitle className="text-lg">Total Cash (All Accounts)</CardTitle>
+                        <CardDescription className="text-blue-700">
+                          Converted to CAD • {totalCash.accounts?.length || 0} accounts
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-blue-900" data-testid="total-cash-amount">
+                          {formatCurrency(totalCash.total_cad || 0, 'CAD')}
+                        </div>
+                        <p className="text-xs text-blue-700 mt-1">
+                          Click to {isTotalCashOpen ? 'hide' : 'show'} accounts
+                        </p>
+                      </div>
+                      {isTotalCashOpen ? (
+                        <ChevronUp className="h-6 w-6 text-blue-700" />
+                      ) : (
+                        <ChevronDown className="h-6 w-6 text-blue-700" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="pt-4 bg-white rounded-b-lg">
+                  <div className="space-y-3">
+                    {totalCash.accounts?.map((account) => (
+                      <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className={`w-10 h-10 rounded-full ${account.is_default ? 'bg-blue-100' : 'bg-gray-200'} flex items-center justify-center`}>
+                            <Wallet className={`h-5 w-5 ${account.is_default ? 'text-blue-600' : 'text-gray-600'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-900">{account.name}</p>
+                              {account.is_default && (
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Default</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500">{account.currency}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right space-y-1">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {formatCurrency(account.original_balance, account.currency)}
+                              </p>
+                              <p className="text-xs text-gray-500">Original</p>
+                            </div>
+                            
+                            {account.currency !== 'CAD' && (
+                              <>
+                                <div className="text-gray-400">→</div>
+                                <div>
+                                  <p className="text-sm font-bold text-blue-600">
+                                    {formatCurrency(account.balance_in_cad, 'CAD')}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Rate: {account.exchange_rate.toFixed(4)}
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs text-gray-500 text-center">
+                      Exchange rates from {totalCash.rates_source} • Last updated: {totalCash.last_updated}
+                    </p>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Income vs Expense Trends */}
