@@ -249,6 +249,97 @@ async def login(credentials: UserLogin):
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+# ============= BANK ACCOUNT ROUTES =============
+
+@api_router.get("/accounts", response_model=List[BankAccount])
+async def get_accounts(current_user: User = Depends(get_current_user)):
+    accounts = await db.bank_accounts.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
+    
+    for account in accounts:
+        if isinstance(account.get('created_at'), str):
+            account['created_at'] = datetime.fromisoformat(account['created_at'])
+    
+    return accounts
+
+@api_router.post("/accounts", response_model=BankAccount)
+async def create_account(account_data: BankAccountCreate, current_user: User = Depends(get_current_user)):
+    # If this is set as default, unset other defaults
+    if account_data.is_default:
+        await db.bank_accounts.update_many(
+            {"user_id": current_user.id},
+            {"$set": {"is_default": False}}
+        )
+    
+    account = BankAccount(user_id=current_user.id, **account_data.model_dump())
+    
+    doc = account.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.bank_accounts.insert_one(doc)
+    return account
+
+@api_router.put("/accounts/{account_id}", response_model=BankAccount)
+async def update_account(account_id: str, account_data: BankAccountCreate, current_user: User = Depends(get_current_user)):
+    # If this is set as default, unset other defaults
+    if account_data.is_default:
+        await db.bank_accounts.update_many(
+            {"user_id": current_user.id, "id": {"$ne": account_id}},
+            {"$set": {"is_default": False}}
+        )
+    
+    result = await db.bank_accounts.find_one_and_update(
+        {"id": account_id, "user_id": current_user.id},
+        {"$set": account_data.model_dump()},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    result.pop('_id', None)
+    if isinstance(result.get('created_at'), str):
+        result['created_at'] = datetime.fromisoformat(result['created_at'])
+    
+    return BankAccount(**result)
+
+@api_router.delete("/accounts/{account_id}")
+async def delete_account(account_id: str, current_user: User = Depends(get_current_user)):
+    # Check if there are transactions linked to this account
+    txn_count = await db.transactions.count_documents({"account_id": account_id, "user_id": current_user.id})
+    if txn_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete account with {txn_count} transactions. Please delete or reassign transactions first.")
+    
+    result = await db.bank_accounts.delete_one({"id": account_id, "user_id": current_user.id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return {"message": "Account deleted successfully"}
+
+@api_router.get("/accounts/{account_id}/balance")
+async def get_account_balance(account_id: str, current_user: User = Depends(get_current_user)):
+    # Get account
+    account = await db.bank_accounts.find_one({"id": account_id, "user_id": current_user.id}, {"_id": 0})
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # Get all transactions for this account
+    transactions = await db.transactions.find({
+        "user_id": current_user.id,
+        "account_id": account_id
+    }, {"_id": 0}).to_list(10000)
+    
+    total_income = sum(t['amount'] for t in transactions if t['type'] == 'income')
+    total_expense = sum(t['amount'] for t in transactions if t['type'] == 'expense')
+    current_balance = account['opening_balance'] + total_income - total_expense
+    
+    return {
+        "account_id": account_id,
+        "account_name": account['name'],
+        "currency": account['currency'],
+        "opening_balance": account['opening_balance'],
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "current_balance": current_balance
+    }
+
 # ============= CATEGORY ROUTES =============
 
 @api_router.get("/categories", response_model=List[Category])
