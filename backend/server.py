@@ -204,6 +204,18 @@ async def register(user_data: UserCreate):
         cat_obj = Category(user_id=user_obj.id, **cat)
         await db.categories.insert_one(cat_obj.model_dump())
     
+    # Create default bank account
+    default_account = BankAccount(
+        user_id=user_obj.id,
+        name="Main Account",
+        currency="CAD",
+        opening_balance=0.0,
+        is_default=True
+    )
+    account_doc = default_account.model_dump()
+    account_doc['created_at'] = account_doc['created_at'].isoformat()
+    await db.bank_accounts.insert_one(account_doc)
+    
     # Create token
     access_token = create_access_token(data={"sub": user_obj.id})
     user_response = User(**user_obj.model_dump())
