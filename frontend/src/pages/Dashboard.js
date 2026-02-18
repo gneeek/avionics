@@ -247,7 +247,12 @@ const Dashboard = () => {
                 <CardContent className="pt-4 bg-white rounded-b-lg">
                   <div className="space-y-3">
                     {totalCash.accounts?.map((account) => (
-                      <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <button
+                        key={account.id}
+                        onClick={() => navigate(`/accounts/${account.id}/update`)}
+                        className="w-full flex items-center justify-between p-4 rounded-lg border bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer text-left"
+                        data-testid={`account-card-${account.id}`}
+                      >
                         <div className="flex items-center gap-3 flex-1">
                           <div className={`w-10 h-10 rounded-full ${account.is_default ? 'bg-blue-100' : 'bg-gray-200'} flex items-center justify-center`}>
                             <Wallet className={`h-5 w-5 ${account.is_default ? 'text-blue-600' : 'text-gray-600'}`} />
