@@ -19,6 +19,7 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -30,6 +31,7 @@ const Transactions = () => {
     type: 'expense',
     amount: '',
     category_id: '',
+    account_id: '',
     description: '',
     date: new Date(),
     is_recurring: false
@@ -37,17 +39,20 @@ const Transactions = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [txnRes, catRes] = await Promise.all([
+      const [txnRes, catRes, accRes] = await Promise.all([
         axios.get(`${API_URL}/transactions`),
-        axios.get(`${API_URL}/categories`)
+        axios.get(`${API_URL}/categories`),
+        axios.get(`${API_URL}/accounts`)
       ]);
       setTransactions(txnRes.data);
       setCategories(catRes.data);
+      setAccounts(accRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load transactions');
