@@ -5,13 +5,22 @@ import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Wallet, PiggyBank } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Wallet, PiggyBank, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
+
+const CURRENCY_SYMBOLS = {
+  CAD: 'CA$',
+  USD: '$',
+  GBP: '£',
+  EUR: '€',
+  AUD: 'A$'
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -22,6 +31,8 @@ const Dashboard = () => {
   const [categoryBreakdown, setCategoryBreakdown] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [categories, setCategories] = useState({});
+  const [totalCash, setTotalCash] = useState(null);
+  const [isTotalCashOpen, setIsTotalCashOpen] = useState(false);
   
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
@@ -35,7 +46,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [overviewRes, trendsRes, breakdownRes, transactionsRes, categoriesRes] = await Promise.all([
+      const [overviewRes, trendsRes, breakdownRes, transactionsRes, categoriesRes, totalCashRes] = await Promise.all([
         axios.get(`${API_URL}/dashboard/overview`, { params: { month: selectedMonth, year: selectedYear } }),
         axios.get(`${API_URL}/dashboard/trends`),
         axios.get(`${API_URL}/dashboard/category-breakdown`, { params: { month: selectedMonth, year: selectedYear, type: 'expense' } }),
