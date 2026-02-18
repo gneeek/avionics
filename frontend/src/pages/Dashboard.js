@@ -151,60 +151,60 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card data-testid="income-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Income</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Total Projected Income</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600" data-testid="total-income">
-                {formatCurrency(overview?.total_income || 0)}
+                {formatCurrency(projections?.summary?.total_projected_income_cad || 0, 'CAD')}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {overview?.transaction_count || 0} transactions
+                Next 6 months (CAD)
               </p>
             </CardContent>
           </Card>
 
           <Card data-testid="expense-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Expenses</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Total Projected Expenses</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600" data-testid="total-expense">
-                {formatCurrency(overview?.total_expense || 0)}
+                {formatCurrency(projections?.summary?.total_projected_expense_cad || 0, 'CAD')}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                This month
+                Next 6 months (CAD)
               </p>
             </CardContent>
           </Card>
 
           <Card data-testid="balance-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Net Balance</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Projected Balance</CardTitle>
               <Wallet className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${(overview?.net_balance || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`} data-testid="net-balance">
-                {formatCurrency(overview?.net_balance || 0)}
+              <div className={`text-2xl font-bold ${(projections?.summary?.projected_net_cad || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`} data-testid="net-balance">
+                {formatCurrency(projections?.summary?.projected_net_cad || 0, 'CAD')}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Income - Expenses
+                Net over 6 months (CAD)
               </p>
             </CardContent>
           </Card>
 
           <Card data-testid="savings-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Savings Rate</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">This Month</CardTitle>
               <PiggyBank className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-600" data-testid="savings-rate">
-                {overview?.savings_rate || 0}%
+                {formatCurrency(overview?.net_balance || 0)}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Of total income
+                Actual ({months[selectedMonth - 1]})
               </p>
             </CardContent>
           </Card>
