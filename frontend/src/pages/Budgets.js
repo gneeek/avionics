@@ -331,6 +331,43 @@ const Budgets = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent data-testid="delete-budget-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Budget</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this budget? This action cannot be undone.
+                {deletingBudget && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{getCategoryById(deletingBudget.category_id)?.icon || '💰'}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {getCategoryById(deletingBudget.category_id)?.name || 'Unknown'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatCurrency(deletingBudget.amount)} • {deletingBudget.period}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="delete-budget-cancel-button">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+                data-testid="delete-budget-confirm-button"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
