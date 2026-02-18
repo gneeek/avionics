@@ -33,6 +33,8 @@ const Dashboard = () => {
   const [categories, setCategories] = useState({});
   const [totalCash, setTotalCash] = useState(null);
   const [isTotalCashOpen, setIsTotalCashOpen] = useState(false);
+  const [projections, setProjections] = useState(null);
+  const [isProjectionsOpen, setIsProjectionsOpen] = useState(false);
   
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
