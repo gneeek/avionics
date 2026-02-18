@@ -63,6 +63,22 @@ class Token(BaseModel):
     token_type: str
     user: User
 
+class BankAccountCreate(BaseModel):
+    name: str
+    currency: Literal["CAD", "USD", "GBP", "EUR", "AUD"]
+    opening_balance: float = 0.0
+    is_default: bool = False
+
+class BankAccount(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    name: str
+    currency: Literal["CAD", "USD", "GBP", "EUR", "AUD"]
+    opening_balance: float
+    is_default: bool
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class CategoryCreate(BaseModel):
     name: str
     type: Literal["income", "expense"]
@@ -82,6 +98,7 @@ class TransactionCreate(BaseModel):
     type: Literal["income", "expense"]
     amount: float
     category_id: str
+    account_id: str
     description: str = ""
     date: datetime
     is_recurring: bool = False
@@ -93,6 +110,7 @@ class Transaction(BaseModel):
     type: Literal["income", "expense"]
     amount: float
     category_id: str
+    account_id: str
     description: str
     date: datetime
     is_recurring: bool
