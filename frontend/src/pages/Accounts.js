@@ -203,7 +203,10 @@ const Accounts = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(account.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(account);
+                          }}
                           data-testid={`delete-account-${account.id}`}
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
