@@ -83,15 +83,20 @@ const Budgets = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this budget?')) {
-      return;
-    }
+  const openDeleteDialog = (budget) => {
+    setDeletingBudget(budget);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingBudget) return;
 
     try {
-      await axios.delete(`${API_URL}/budgets/${id}`);
+      await axios.delete(`${API_URL}/budgets/${deletingBudget.id}`);
       toast.success('Budget deleted successfully');
       fetchData();
+      setDeleteDialogOpen(false);
+      setDeletingBudget(null);
     } catch (error) {
       console.error('Error deleting budget:', error);
       toast.error('Failed to delete budget');
