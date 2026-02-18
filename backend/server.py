@@ -651,6 +651,75 @@ async def get_category_breakdown(
     
     return sorted(result, key=lambda x: x['amount'], reverse=True)
 
+@api_router.get("/dashboard/total-cash")
+async def get_total_cash(current_user: User = Depends(get_current_user)):
+    """
+    Get total cash across all accounts converted to CAD with real-time exchange rates
+    """
+    try:
+        # Fetch current exchange rates (CAD as base)
+        async with httpx.AsyncClient() as client:
+            response = await client.get("https://api.exchangerate-api.com/v4/latest/CAD", timeout=10.0)
+            response.raise_for_status()
+            exchange_data = response.json()
+            rates = exchange_data.get("rates", {})
+        
+        # Get all accounts for user
+        accounts = await db.bank_accounts.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
+        
+        total_cad = 0.0
+        account_details = []
+        
+        for account in accounts:
+            # Calculate current balance for this account
+            account_txns = await db.transactions.find({
+                "user_id": current_user.id,
+                "account_id": account['id']
+            }, {"_id": 0}).to_list(10000)
+            
+            acc_income = sum(t['amount'] for t in account_txns if t['type'] == 'income')
+            acc_expense = sum(t['amount'] for t in account_txns if t['type'] == 'expense')
+            current_balance = account['opening_balance'] + acc_income - acc_expense
+            
+            # Convert to CAD
+            currency = account['currency']
+            if currency == 'CAD':
+                balance_in_cad = current_balance
+                exchange_rate = 1.0
+            else:
+                # Rate from API is: 1 CAD = X currency
+                # To convert from currency to CAD: amount / rate
+                rate = rates.get(currency, 1.0)
+                balance_in_cad = current_balance / rate if rate > 0 else 0
+                exchange_rate = rate
+            
+            total_cad += balance_in_cad
+            
+            account_details.append({
+                "id": account['id'],
+                "name": account['name'],
+                "currency": currency,
+                "original_balance": current_balance,
+                "balance_in_cad": balance_in_cad,
+                "exchange_rate": exchange_rate,
+                "is_default": account.get('is_default', False)
+            })
+        
+        return {
+            "total_cad": total_cad,
+            "accounts": account_details,
+            "base_currency": "CAD",
+            "rates_source": "exchangerate-api.com",
+            "last_updated": exchange_data.get("date", "")
+        }
+    
+    except httpx.RequestError as e:
+        logger.error(f"Error fetching exchange rates: {e}")
+        raise HTTPException(status_code=503, detail="Unable to fetch exchange rates. Please try again later.")
+    except Exception as e:
+        logger.error(f"Error calculating total cash: {e}")
+        raise HTTPException(status_code=500, detail="Error calculating total cash")
+
 # Include the router in the main app
 app.include_router(api_router)
 
