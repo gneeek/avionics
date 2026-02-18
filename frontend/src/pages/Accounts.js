@@ -27,7 +27,9 @@ const Accounts = () => {
   const [accountBalances, setAccountBalances] = useState({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
+  const [deletingAccount, setDeletingAccount] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
