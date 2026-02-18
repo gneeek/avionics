@@ -74,7 +74,14 @@ const Dashboard = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, currency = 'USD') => {
+    if (currency && CURRENCY_SYMBOLS[currency]) {
+      const symbol = CURRENCY_SYMBOLS[currency];
+      return `${symbol}${new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)}`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
