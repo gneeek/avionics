@@ -77,15 +77,20 @@ const Categories = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) {
-      return;
-    }
+  const openDeleteDialog = (category) => {
+    setDeletingCategory(category);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCategory) return;
 
     try {
-      await axios.delete(`${API_URL}/categories/${id}`);
+      await axios.delete(`${API_URL}/categories/${deletingCategory.id}`);
       toast.success('Category deleted successfully');
       fetchCategories();
+      setDeleteDialogOpen(false);
+      setDeletingCategory(null);
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');
