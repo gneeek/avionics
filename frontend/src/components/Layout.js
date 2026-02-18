@@ -12,6 +12,7 @@ const Layout = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Accounts', href: '/accounts', icon: Receipt },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
     { name: 'Categories', href: '/categories', icon: Tag },
     { name: 'Budgets', href: '/budgets', icon: PiggyBank },
