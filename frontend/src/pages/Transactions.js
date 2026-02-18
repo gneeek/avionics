@@ -339,6 +339,22 @@ const Transactions = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="account">Account *</Label>
+                <Select value={formData.account_id} onValueChange={(val) => setFormData({...formData, account_id: val})}>
+                  <SelectTrigger data-testid="transaction-account-select">
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map(acc => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.name} ({acc.currency})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
