@@ -13,6 +13,11 @@ RUN yarn install
 # Copy source code
 COPY . .
 
+# Set build-time environment variable for the API URL
+# This can be overridden with --build-arg REACT_APP_BACKEND_URL=http://your-api-url
+ARG REACT_APP_BACKEND_URL=http://localhost:8001
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+
 # Build the application
 RUN yarn build
 
