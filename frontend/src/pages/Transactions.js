@@ -46,7 +46,8 @@ const Transactions = () => {
     account_id: '',
     description: '',
     date: new Date(),
-    is_recurring: false
+    is_recurring: false,
+    recurring_frequency: 'monthly'
   });
 
   useEffect(() => {
