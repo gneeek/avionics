@@ -27,12 +27,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_BACKEND_URL: http://localhost:8001
     container_name: cashflow-frontend
     ports:
       - "3000:80"
-    environment:
-      - REACT_APP_BACKEND_URL=http://localhost:8001
     depends_on:
       - backend
     restart: unless-stopped
