@@ -64,7 +64,7 @@ const Transactions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.amount || !formData.category_id) {
+    if (!formData.amount || !formData.category_id || !formData.account_id) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -114,16 +114,19 @@ const Transactions = () => {
         type: transaction.type,
         amount: transaction.amount.toString(),
         category_id: transaction.category_id,
+        account_id: transaction.account_id,
         description: transaction.description,
         date: new Date(transaction.date),
         is_recurring: transaction.is_recurring
       });
     } else {
       setEditingTransaction(null);
+      const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0];
       setFormData({
         type: 'expense',
         amount: '',
         category_id: '',
+        account_id: defaultAccount?.id || '',
         description: '',
         date: new Date(),
         is_recurring: false
