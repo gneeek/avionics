@@ -51,13 +51,15 @@ const Dashboard = () => {
         axios.get(`${API_URL}/dashboard/trends`),
         axios.get(`${API_URL}/dashboard/category-breakdown`, { params: { month: selectedMonth, year: selectedYear, type: 'expense' } }),
         axios.get(`${API_URL}/transactions`, { params: { limit: 10 } }),
-        axios.get(`${API_URL}/categories`)
+        axios.get(`${API_URL}/categories`),
+        axios.get(`${API_URL}/dashboard/total-cash`)
       ]);
 
       setOverview(overviewRes.data);
       setTrends(trendsRes.data);
       setCategoryBreakdown(breakdownRes.data);
       setRecentTransactions(transactionsRes.data.slice(0, 10));
+      setTotalCash(totalCashRes.data);
       
       const catMap = {};
       categoriesRes.data.forEach(cat => {
