@@ -16,6 +16,14 @@ import { format } from 'date-fns';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+const CURRENCY_SYMBOLS = {
+  CAD: 'CA$',
+  USD: '$',
+  GBP: '£',
+  EUR: '€',
+  AUD: 'A$'
+};
+
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
