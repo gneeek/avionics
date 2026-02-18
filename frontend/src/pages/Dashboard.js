@@ -311,6 +311,154 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* 6-Month Projections Grid */}
+        {projections && (
+          <Card className="border-2 border-emerald-200 bg-emerald-50" data-testid="projections-card">
+            <Collapsible open={isProjectionsOpen} onOpenChange={setIsProjectionsOpen}>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-emerald-100 transition-colors rounded-t-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
+                        <CalendarDays className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <CardTitle className="text-lg">6-Month Projections</CardTitle>
+                        <CardDescription className="text-emerald-700">
+                          Based on recurring transactions • {projections.account_projections?.length || 0} accounts
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-emerald-900" data-testid="projections-total">
+                          {formatCurrency(
+                            projections.grand_totals?.[projections.grand_totals.length - 1]?.total_balance_cad || 0, 
+                            'CAD'
+                          )}
+                        </div>
+                        <p className="text-xs text-emerald-700 mt-1">
+                          Projected total in {projections.months?.[projections.months.length - 1]}
+                        </p>
+                      </div>
+                      {isProjectionsOpen ? (
+                        <ChevronUp className="h-6 w-6 text-emerald-700" />
+                      ) : (
+                        <ChevronDown className="h-6 w-6 text-emerald-700" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="pt-4 bg-white rounded-b-lg overflow-x-auto">
+                  {/* Projections Table */}
+                  <div className="min-w-[800px]">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="text-left p-3 font-semibold text-gray-700 border-b">Account</th>
+                          {projections.months?.map((month) => (
+                            <th key={month} className="text-right p-3 font-semibold text-gray-700 border-b">
+                              {month}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projections.account_projections?.map((account) => (
+                          <tr key={account.account_id} className="border-b hover:bg-gray-50">
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                                  <Wallet className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{account.account_name}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Current: {formatCurrency(account.current_balance, account.currency)}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            {account.monthly_projections?.map((proj, idx) => (
+                              <td key={idx} className="p-3 text-right">
+                                <p className={`font-semibold ${proj.projected_balance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                  {formatCurrency(proj.projected_balance, account.currency)}
+                                </p>
+                                <div className="text-xs space-x-2">
+                                  {proj.income > 0 && (
+                                    <span className="text-green-600">+{formatCurrency(proj.income, account.currency)}</span>
+                                  )}
+                                  {proj.expense > 0 && (
+                                    <span className="text-red-600">-{formatCurrency(proj.expense, account.currency)}</span>
+                                  )}
+                                </div>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                        
+                        {/* Grand Total Row */}
+                        <tr className="bg-emerald-50 font-bold">
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
+                                <DollarSign className="h-4 w-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-emerald-900">Grand Total (CAD)</p>
+                                <p className="text-xs text-emerald-700 font-normal">All accounts combined</p>
+                              </div>
+                            </div>
+                          </td>
+                          {projections.grand_totals?.map((total, idx) => (
+                            <td key={idx} className="p-3 text-right">
+                              <p className={`font-bold text-lg ${total.total_balance_cad >= 0 ? 'text-emerald-900' : 'text-red-600'}`}>
+                                {formatCurrency(total.total_balance_cad, 'CAD')}
+                              </p>
+                              <div className="text-xs space-x-2 font-normal">
+                                {total.total_income_cad > 0 && (
+                                  <span className="text-green-600">+{formatCurrency(total.total_income_cad, 'CAD')}</span>
+                                )}
+                                {total.total_expense_cad > 0 && (
+                                  <span className="text-red-600">-{formatCurrency(total.total_expense_cad, 'CAD')}</span>
+                                )}
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* No recurring transactions notice */}
+                  {projections.account_projections?.every(acc => 
+                    acc.monthly_projections?.every(p => p.income === 0 && p.expense === 0)
+                  ) && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-amber-800">
+                        <RefreshCw className="h-4 w-4" />
+                        <p className="text-sm font-medium">No recurring transactions found</p>
+                      </div>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Mark transactions as recurring in the Transactions page to see projections here.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs text-gray-500 text-center">
+                      Projections are based on recurring transactions marked in the Transactions page
+                    </p>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Income vs Expense Trends */}
