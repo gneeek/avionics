@@ -48,13 +48,14 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [overviewRes, trendsRes, breakdownRes, transactionsRes, categoriesRes, totalCashRes] = await Promise.all([
+      const [overviewRes, trendsRes, breakdownRes, transactionsRes, categoriesRes, totalCashRes, projectionsRes] = await Promise.all([
         axios.get(`${API_URL}/dashboard/overview`, { params: { month: selectedMonth, year: selectedYear } }),
         axios.get(`${API_URL}/dashboard/trends`),
         axios.get(`${API_URL}/dashboard/category-breakdown`, { params: { month: selectedMonth, year: selectedYear, type: 'expense' } }),
         axios.get(`${API_URL}/transactions`, { params: { limit: 10 } }),
         axios.get(`${API_URL}/categories`),
-        axios.get(`${API_URL}/dashboard/total-cash`)
+        axios.get(`${API_URL}/dashboard/total-cash`),
+        axios.get(`${API_URL}/projections`)
       ]);
 
       setOverview(overviewRes.data);
@@ -62,6 +63,7 @@ const Dashboard = () => {
       setCategoryBreakdown(breakdownRes.data);
       setRecentTransactions(transactionsRes.data.slice(0, 10));
       setTotalCash(totalCashRes.data);
+      setProjections(projectionsRes.data);
       
       const catMap = {};
       categoriesRes.data.forEach(cat => {
