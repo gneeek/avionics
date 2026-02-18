@@ -103,15 +103,20 @@ const Transactions = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) {
-      return;
-    }
+  const openDeleteDialog = (transaction) => {
+    setDeletingTransaction(transaction);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingTransaction) return;
 
     try {
-      await axios.delete(`${API_URL}/transactions/${id}`);
+      await axios.delete(`${API_URL}/transactions/${deletingTransaction.id}`);
       toast.success('Transaction deleted successfully');
       fetchData();
+      setDeleteDialogOpen(false);
+      setDeletingTransaction(null);
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast.error('Failed to delete transaction');
