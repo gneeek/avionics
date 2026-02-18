@@ -292,7 +292,7 @@ const Dashboard = () => {
                             )}
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                   
