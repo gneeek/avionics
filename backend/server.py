@@ -739,6 +739,152 @@ async def get_category_breakdown(
     
     return sorted(result, key=lambda x: x['amount'], reverse=True)
 
+@api_router.get("/projections")
+async def get_projections(current_user: User = Depends(get_current_user)):
+    """
+    Get 6-month projections based on recurring transactions.
+    Shows projected balance at end of each month per account.
+    """
+    try:
+        # Get all accounts for user
+        accounts = await db.bank_accounts.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
+        
+        # Get all recurring transactions for user
+        recurring_txns = await db.transactions.find({
+            "user_id": current_user.id,
+            "is_recurring": True
+        }, {"_id": 0}).to_list(10000)
+        
+        # Generate next 6 months (including current)
+        now = datetime.now(timezone.utc)
+        months = []
+        for i in range(6):
+            if now.month + i <= 12:
+                month = now.month + i
+                year = now.year
+            else:
+                month = (now.month + i) % 12 or 12
+                year = now.year + 1
+            
+            month_name = datetime(year, month, 1).strftime("%b %Y")
+            months.append({
+                "month": month,
+                "year": year,
+                "name": month_name
+            })
+        
+        # Fetch exchange rates for currency conversion
+        rates = {"CAD": 1.0}
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get("https://api.exchangerate-api.com/v4/latest/CAD", timeout=10.0)
+                response.raise_for_status()
+                exchange_data = response.json()
+                rates = exchange_data.get("rates", {"CAD": 1.0})
+        except Exception as e:
+            logger.warning(f"Could not fetch exchange rates: {e}")
+        
+        # Calculate projections per account
+        account_projections = []
+        grand_totals = {m["name"]: {"income": 0, "expense": 0, "balance_cad": 0} for m in months}
+        total_projected_income = 0
+        total_projected_expense = 0
+        
+        for account in accounts:
+            # Get current balance for this account
+            account_txns = await db.transactions.find({
+                "user_id": current_user.id,
+                "account_id": account['id']
+            }, {"_id": 0}).to_list(10000)
+            
+            acc_income = sum(t['amount'] for t in account_txns if t['type'] == 'income')
+            acc_expense = sum(t['amount'] for t in account_txns if t['type'] == 'expense')
+            current_balance = account['opening_balance'] + acc_income - acc_expense
+            
+            # Get recurring transactions for this account
+            acc_recurring = [t for t in recurring_txns if t.get('account_id') == account['id']]
+            
+            # Calculate projections for each month
+            monthly_projections = []
+            running_balance = current_balance
+            
+            for month_info in months:
+                month_income = 0
+                month_expense = 0
+                
+                for txn in acc_recurring:
+                    frequency = txn.get('recurring_frequency', 'monthly')
+                    amount = txn['amount']
+                    
+                    if frequency == 'monthly':
+                        if txn['type'] == 'income':
+                            month_income += amount
+                        else:
+                            month_expense += amount
+                    elif frequency == 'twice_monthly':
+                        # Twice per month = 2x the amount
+                        if txn['type'] == 'income':
+                            month_income += amount * 2
+                        else:
+                            month_expense += amount * 2
+                
+                # Projected balance at end of month
+                running_balance = running_balance + month_income - month_expense
+                
+                monthly_projections.append({
+                    "month": month_info["name"],
+                    "income": month_income,
+                    "expense": month_expense,
+                    "projected_balance": running_balance
+                })
+                
+                # Convert to CAD for grand totals
+                currency = account['currency']
+                rate = rates.get(currency, 1.0)
+                balance_in_cad = running_balance / rate if rate > 0 else running_balance
+                
+                grand_totals[month_info["name"]]["income"] += month_income / rate if rate > 0 else month_income
+                grand_totals[month_info["name"]]["expense"] += month_expense / rate if rate > 0 else month_expense
+                grand_totals[month_info["name"]]["balance_cad"] += balance_in_cad
+                
+                total_projected_income += month_income / rate if rate > 0 else month_income
+                total_projected_expense += month_expense / rate if rate > 0 else month_expense
+            
+            account_projections.append({
+                "account_id": account['id'],
+                "account_name": account['name'],
+                "currency": account['currency'],
+                "current_balance": current_balance,
+                "monthly_projections": monthly_projections
+            })
+        
+        # Format grand totals as a list
+        grand_totals_list = [
+            {
+                "month": m["name"],
+                "total_income_cad": grand_totals[m["name"]]["income"],
+                "total_expense_cad": grand_totals[m["name"]]["expense"],
+                "total_balance_cad": grand_totals[m["name"]]["balance_cad"]
+            }
+            for m in months
+        ]
+        
+        return {
+            "months": [m["name"] for m in months],
+            "account_projections": account_projections,
+            "grand_totals": grand_totals_list,
+            "summary": {
+                "total_projected_income_cad": total_projected_income,
+                "total_projected_expense_cad": total_projected_expense,
+                "projected_net_cad": total_projected_income - total_projected_expense
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"Error calculating projections: {e}")
+        raise HTTPException(status_code=500, detail="Error calculating projections")
+
+
 @api_router.get("/dashboard/total-cash")
 async def get_total_cash(current_user: User = Depends(get_current_user)):
     """
